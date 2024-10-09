@@ -6,30 +6,31 @@ using UnityEngine;
 
 public class PlayerNetwork : NetworkBehaviour
 {
-    private NetworkVariable<MyCustomData> randomNumber = new NetworkVariable<MyCustomData>(
-        new MyCustomData{
-            _int = 52,
-            _bool = true,
-        }, NetworkVariableReadPermission.Everyone,NetworkVariableWritePermission.Owner);
-    public struct MyCustomData : INetworkSerializable
-    {
-        public int _int;
-        public bool _bool;
-        public string message;
+    public GameObject spawnedObjectPrefab;
+    // private NetworkVariable<MyCustomData> randomNumber = new NetworkVariable<MyCustomData>(
+    //     new MyCustomData{
+    //         _int = 52,
+    //         _bool = true,
+    //     }, NetworkVariableReadPermission.Everyone,NetworkVariableWritePermission.Owner);
+    // public struct MyCustomData : INetworkSerializable
+    // {
+    //     public int _int;
+    //     public bool _bool;
+    //     public string message;
 
-        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
-        {
-            serializer.SerializeValue(ref _int);
-            serializer.SerializeValue(ref _bool);
-            serializer.SerializeValue(ref message);
-        }
-    }
-    public override void OnNetworkSpawn()
-    {
-        randomNumber.OnValueChanged += (MyCustomData previousValue, MyCustomData newValue)=>{
-            Debug.Log(OwnerClientId+"; "+newValue._int+"; "+newValue._bool+"; "+newValue.message);
-        };
-    }
+    //     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    //     {
+    //         serializer.SerializeValue(ref _int);
+    //         serializer.SerializeValue(ref _bool);
+    //         serializer.SerializeValue(ref message);
+    //     }
+    // }
+    // public override void OnNetworkSpawn()
+    // {
+    //     randomNumber.OnValueChanged += (MyCustomData previousValue, MyCustomData newValue)=>{
+    //         Debug.Log(OwnerClientId+"; "+newValue._int+"; "+newValue._bool+"; "+newValue.message);
+    //     };
+    // }
 
     private void Update()
     {
@@ -37,13 +38,20 @@ public class PlayerNetwork : NetworkBehaviour
         {
             return;
         }
-        if (Input.GetKey(KeyCode.T))
+        if (Input.GetKeyDown(KeyCode.T))
         {
-            randomNumber.Value = new MyCustomData{
-                _int=10,
-                _bool=false,
-                message="hello",
-            };
+            //TestServerRpc();
+            if(IsServer){
+                CreateSphere();
+            }else{
+                CreateSphereServerRpc();
+            }
+            
+            // randomNumber.Value = new MyCustomData{
+            //     _int=10,
+            //     _bool=false,
+            //     message="hello",
+            // };
         }
         Vector3 moveDir = new Vector3(0,0,0);
         if (Input.GetKey(KeyCode.W))
@@ -64,5 +72,14 @@ public class PlayerNetwork : NetworkBehaviour
         }
         float moveSpeed = 3f;
         transform.position += moveDir * moveSpeed * Time.deltaTime;
+    }
+    [ServerRpc]
+    private void CreateSphereServerRpc(){
+        CreateSphere();
+    }
+    private void CreateSphere(){
+        var instance = Instantiate(spawnedObjectPrefab);
+        var instanceNetworkObject = instance.GetComponent<NetworkObject>();
+        instanceNetworkObject.Spawn();
     }
 }
