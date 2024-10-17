@@ -14,8 +14,12 @@ public class PlayerNetwork : NetworkBehaviour
     [SerializeField] private AudioListener listener;
     [SerializeField] private float rotationSpeed = 0.1f;
     [SerializeField] private float accumulatedRotation;
+    [SerializeField] public Transform bulletSpawnPoint;
+    [SerializeField] public GameObject bulletPrefab;
+    [SerializeField] public float bulletSpeed = 10;
     public CharacterController cc;
     private MyPlayerInput playerInput;
+    public NetworkVariable<float> velocity = new NetworkVariable<float>();
 
     private void Start(){
         playerInput = new();
@@ -40,10 +44,16 @@ public class PlayerNetwork : NetworkBehaviour
         {
             Move(moveInput);
             LookAround(mouseDelta);
+            if (playerInput.Player.LeftClick.ReadValue<float>() > 0){
+                Shoot();
+            }
         }else if (IsClient && IsLocalPlayer)
         {
             MoveServerRpc(moveInput);
             LookAroundServerRpc(mouseDelta);
+            if (playerInput.Player.LeftClick.ReadValue<float>() > 0){
+                ShootServerRpc();
+            }
         }
     }
     [ServerRpc]
@@ -67,6 +77,13 @@ public class PlayerNetwork : NetworkBehaviour
         cc.Move(playerSpeed * Time.deltaTime * calcMove);
     }
 
+    private void Shoot(){
+        var bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+        var bulletNetworkObject = bullet.GetComponent<NetworkObject>();
+        bulletNetworkObject.Spawn(true);
+        bullet.GetComponent<Rigidbody>().velocity = bulletSpawnPoint.forward * bulletSpeed;
+    }
+
     [ServerRpc]
     private void LookAroundServerRpc(Vector2 _input){
         LookAround(_input);
@@ -75,5 +92,9 @@ public class PlayerNetwork : NetworkBehaviour
     [ServerRpc]
     private void MoveServerRpc(Vector2 _input){
         Move(_input);
+    }
+    [ServerRpc]
+    private void ShootServerRpc(){
+        Shoot();
     }
 }
