@@ -6,12 +6,23 @@ using UnityEngine;
 public class Bullet : NetworkBehaviour
 {
     public float life = 3; 
-    private void Awake(){
-        Destroy(gameObject, life);
+    private void Start()
+    {
+        if (IsServer)
+        {
+            Destroy(gameObject, life);
+        }
     }
     private void OnCollisionEnter(Collision collision)
     {
-        Destroy(collision.gameObject);
-        Destroy(gameObject);
+        if (IsServer)
+        {
+            GameObject hit = collision.gameObject;
+            PlayerHealth health = hit.GetComponent<PlayerHealth>();
+            if (health != null){
+                health.TakeDamage(10);
+            }
+            Destroy(gameObject);
+        }
     }
 }

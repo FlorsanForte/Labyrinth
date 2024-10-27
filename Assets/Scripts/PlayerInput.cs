@@ -157,7 +157,7 @@ public partial class @MyPlayerInput: IInputActionCollection2, IDisposable
                     ""name"": """",
                     ""id"": ""6abee593-b449-4a9d-b30c-4675c1983fe7"",
                     ""path"": ""<Mouse>/leftButton"",
-                    ""interactions"": ""MultiTap(tapCount=1)"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""LeftClick"",
