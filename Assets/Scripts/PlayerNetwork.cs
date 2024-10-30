@@ -13,39 +13,25 @@ public class PlayerNetwork : NetworkBehaviour
     [SerializeField] private AudioListener listener;
     [SerializeField] private float rotationSpeed = 0.1f;
     [SerializeField] private float accumulatedRotation;
-    [SerializeField] public Transform bulletSpawnPoint;
-    [SerializeField] public GameObject bulletPrefab;
-    [SerializeField] public float bulletSpeed = 20;
     public CharacterController cc;
     private MyPlayerInput playerInput;
     public NetworkVariable<float> velocity = new NetworkVariable<float>();
 
-    private float shootCooldown = 1f;
-    private float lastShotTime;
+    private WeaponController weaponController;
 
     private void Start()
     {
         playerInput = new MyPlayerInput();
         playerInput.Enable();
-        lastShotTime = -shootCooldown; // Initialize to allow immediate shooting
-        playerInput.Player.LeftClick.performed += _ => OnClick();
-    }
 
-    private void OnClick()
-    {
-        if (Time.time >= lastShotTime + shootCooldown)
+        weaponController = GetComponentInChildren<WeaponController>();
+        if (weaponController == null)
         {
-            lastShotTime = Time.time;
-
-            if (IsServer && IsLocalPlayer)
-            {
-                Shoot();
-            }
-            else if (IsClient && IsLocalPlayer)
-            {
-                ShootServerRpc();
-            }
+            Debug.LogError("WeaponController script is missing from weapon.");
+            return;
         }
+
+        playerInput.Player.LeftClick.performed += _ => weaponController.Fire();
     }
 
     public override void OnNetworkSpawn()
@@ -91,14 +77,6 @@ public class PlayerNetwork : NetworkBehaviour
         cc.Move(playerSpeed * Time.deltaTime * calcMove);
     }
 
-    private void Shoot()
-    {
-        var bullet = Instantiate(bulletPrefab, bulletSpawnPoint.position, bulletSpawnPoint.rotation);
-        var bulletNetworkObject = bullet.GetComponent<NetworkObject>();
-        bulletNetworkObject.Spawn(true);
-        bullet.GetComponent<Rigidbody>().velocity = bulletSpawnPoint.forward * bulletSpeed;
-    }
-
     [ServerRpc]
     private void LookAroundServerRpc(Vector2 _input)
     {
@@ -109,11 +87,5 @@ public class PlayerNetwork : NetworkBehaviour
     private void MoveServerRpc(Vector2 _input)
     {
         Move(_input);
-    }
-
-    [ServerRpc]
-    private void ShootServerRpc()
-    {
-        Shoot();
     }
 }
