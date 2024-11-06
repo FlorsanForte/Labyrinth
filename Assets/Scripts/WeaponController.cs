@@ -26,12 +26,7 @@ public class WeaponController : NetworkBehaviour
     {
         if (!IsOwner) return;
 
-        HandleSway();
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            Fire();
-        }
+        //HandleSway();
     }
 
     private void HandleSway()
