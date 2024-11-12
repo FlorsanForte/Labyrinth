@@ -4,6 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using Cinemachine;
 using UnityEngine.InputSystem;
+using UnityEditor;
 
 public class PlayerNetwork : NetworkBehaviour
 {
@@ -44,12 +45,12 @@ public class PlayerNetwork : NetworkBehaviour
     private float staminaRegenTimer;
 
     [SerializeField] private Animator animator;
+    [SerializeField] private Renderer playerMesh;
 
     private void Start()
     {
         playerInput = new MyPlayerInput();
         playerInput.Enable();
-
         weaponController = GetComponentInChildren<WeaponController>();
         playerInput.Player.LeftClick.performed += _ => weaponController.Fire();
         playerInput.Player.Zoom.started += _ => Zoom(true);
@@ -64,6 +65,7 @@ public class PlayerNetwork : NetworkBehaviour
         {
             listener.enabled = true;
             vc.Priority = 1;
+            playerMesh.enabled = false;
         }
         else
         {

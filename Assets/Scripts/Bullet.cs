@@ -6,6 +6,7 @@ using UnityEngine;
 public class Bullet : NetworkBehaviour
 {
     public float life = 3; 
+    public ulong attackerID = 0;
     private void Start()
     {
         if (IsServer)
@@ -20,7 +21,7 @@ public class Bullet : NetworkBehaviour
             GameObject hit = collision.gameObject;
             PlayerHealth health = hit.GetComponent<PlayerHealth>();
             if (health != null){
-                health.TakeDamage(10);
+                health.TakeDamageServerRPC(50);
             }
             Destroy(gameObject);
         }

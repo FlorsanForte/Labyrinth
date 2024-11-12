@@ -14,29 +14,11 @@ public class WeaponController : NetworkBehaviour
     [SerializeField] private float fireRate = 0.5f;
     [SerializeField] VisualEffect muzzleFlash;
 
-    private Vector3 initialPosition;
     private float nextFireTime = 0f;
-
-    private void Start()
-    {
-        initialPosition = transform.localPosition;
-    }
 
     private void Update()
     {
         if (!IsOwner) return;
-
-        //HandleSway();
-    }
-
-    private void HandleSway()
-    {
-        float mouseX = Input.GetAxis("Mouse X");
-        //float mouseY = Input.GetAxis("Mouse Y");
-
-        //Vector3 targetPosition = new Vector3(-mouseX * swayIntensity, -mouseY * swayIntensity, 0);
-        Vector3 targetPosition = new Vector3(-mouseX * swayIntensity, 0, 0);
-        transform.localPosition = Vector3.Lerp(transform.localPosition, initialPosition + targetPosition, Time.deltaTime * swaySmoothness);
     }
 
     public void Fire()
@@ -62,6 +44,7 @@ public class WeaponController : NetworkBehaviour
         var bulletNetworkObject = bullet.GetComponent<NetworkObject>();
         bulletNetworkObject.Spawn(true);
         bullet.GetComponent<Rigidbody>().velocity = firePoint.forward * bulletSpeed;
+        bullet.GetComponent<Bullet>().attackerID = OwnerClientId;
         muzzleFlash.Play();
     }
 
